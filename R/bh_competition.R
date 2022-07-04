@@ -6,6 +6,9 @@
 #' @param timesteps length of time to simulate dynamics
 #' @param discrete whether or not abundances should be discrete; discretization leads to a stochastic model
 #' @param final_N whether or not function should return only the final N after all timesteps
+#' @param extinction_thresh the threshold population size for extinction
+
+#' @importFrom stats "rpois"
 #' @export
 
 bh_competition <- function(r = 1.5, alpha = 1, initial_N = 10, timesteps = 30, discrete = FALSE, final_N = FALSE, extinction_thresh = 0.01){
