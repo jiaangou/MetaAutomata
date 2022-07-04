@@ -3,8 +3,9 @@
 #' @description Pieces functions together and runs a stochastic simulation of metacommunity dynamics
 
 #' @param initial_df dataframe specifying the initial conditions with ID, xy coordinates, speices denisities
-#' @param r growth rate of species
-#' @param alpha length(r)^2 competition matrix
+#' @param r growth rate of species (assumed equivalent for all species)
+#' @param aij interspecific interaction strength (aii assumed to be 1)
+#' @param K carrying capacity of the environment (competition matrix is scaled according to K)
 #' @param delta aggregation parameter where 0 is uniform weighting, >0 high densities are weighted more (<0 = less weight)
 #' @param timesteps length of time to simulate dynamics
 #' @param disp_rate dispersal rate which can range from 0 (no dispersal) to 1 (maximum dispersal)
@@ -17,6 +18,7 @@
 #' @import dplyr
 #' @import tidyr
 #' @import purrr
+#' @import tibble
 #' @importFrom stats "setNames"
 
 
@@ -25,7 +27,12 @@
 
 
 stochastic_sim <- function(initial_df, aij, delta, r = 3, K = 100, timesteps = 5, disp_rate = 0.1, nh_size = 1,
-                           nh = "vonNeumann", dd_emi = FALSE,  torus = TRUE, no.spp = 2){
+                           nh = "vonNeumann", dd_emi = FALSE,  torus = TRUE){
+
+  #
+  no.spp <- initial_df%>%
+    select(-ID, -x, -y)%>%
+    ncol()
 
 
   #Species names
