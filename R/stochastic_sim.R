@@ -20,6 +20,7 @@
 #' @import purrr
 #' @import tibble
 #' @importFrom stats "setNames"
+#' @export
 
 
 #Silences error message for using the '.' syntax
