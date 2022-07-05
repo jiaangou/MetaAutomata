@@ -30,7 +30,7 @@
 stochastic_sim <- function(initial_df, aij, delta, r = 3, K = 100, timesteps = 5, disp_rate = 0.1, nh_size = 1,
                            nh = "vonNeumann", dd_emi = FALSE,  torus = TRUE){
 
-  #
+  #Number of species
   no.spp <- initial_df%>%
     select(-ID, -x, -y)%>%
     ncol()
