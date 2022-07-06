@@ -24,7 +24,7 @@
 #' @import tibble
 #' @import doParallel
 #' @importFrom stats "setNames"
-#'
+#' @export
 
 
 
