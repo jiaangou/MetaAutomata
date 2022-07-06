@@ -86,9 +86,9 @@ stochastic_sim <- function(initial_df, aij, delta, r = 3, K = 100, timesteps = 5
                                          initial_N = x, discrete = TRUE,
                                          timesteps = 1, final_N = TRUE))%>%
       t()%>%
-      as_tibble()%>%
+      as.data.frame()%>%
       setNames(sp_names)%>%
-      bind_cols(initial_df%>%select(`ID`, `x`,`y`), ., .name_repair = 'unique')
+      bind_cols(initial_df%>%select(`ID`, `x`,`y`), .)
 
     #return(comp)
     #out[[i]] <- comp
