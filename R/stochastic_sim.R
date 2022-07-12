@@ -13,7 +13,7 @@
 #' @param nh Type of neighborhood for dispersal to occur. Can be either 'Von Neummann' or 'Moore'
 #' @param dd_emi If TRUE, emigration is density-dependent and follows type-II functional response
 #' @param torus If TRUE, the lattice is wrapped around to remove edge effects
-
+#' @param extinction_halt If TRUE, simulation halts when one species goes extinct before timesteps is reached
 
 #' @import dplyr
 #' @import tidyr
@@ -28,7 +28,7 @@
 
 
 stochastic_sim <- function(initial_df, aij, delta, r = 3, K = 100, timesteps = 5, disp_rate = 0.1, nh_size = 1,
-                           nh = "vonNeumann", dd_emi = FALSE,  torus = TRUE){
+                           nh = "vonNeumann", dd_emi = FALSE,  torus = TRUE, extinction_halt = TRUE){
 
   #Number of species
   no.spp <- initial_df%>%
@@ -150,9 +150,18 @@ stochastic_sim <- function(initial_df, aij, delta, r = 3, K = 100, timesteps = 5
         mutate(Density = `competition` - `emigrants` + `immigrants`)%>%
         pivot_wider(names_from = 'Species', values_from = 'Density', id_cols = c('ID','x','y'))
 
+    } #dispersal end
+
+    #Break if one species is extinct ------------
+    check_extinct <- out[[i]]%>%
+      select(N1,N2)%>%
+      colSums()
+
+    if(any(check_extinct == 0)){
+      break
     }
 
-  }
+  } #loop end
 
 
 
