@@ -90,60 +90,67 @@ stochastic_sim <- function(initial_df, aij, delta, r = 3, K = 100, timesteps = 5
       setNames(sp_names)%>%
       bind_cols(initial_df%>%select(`ID`, `x`,`y`), .)
 
-    #return(comp)
-    #out[[i]] <- comp
 
-    # 2. Emigrate --------------------
-    # Occurs after competition (fraction of remaining population become emigrants)
-    #note: spp have same emigration rates
-    emi <- comp%>%
-      rowwise()%>%
-      mutate_at(vars(sp_names), .funs = function(x)dd_emigration(N = x, dd = dd_emi, discrete = TRUE, max = disp_rate))%>%
-      ungroup()%>%
-      tidyr::pivot_longer(cols = sp_names, names_to = "Species", values_to = 'emigrants')%>%
-      mutate(ID = as.character(ID))%>%
-      filter(`emigrants` > 0)
+    #Skip dispersal if dispersal is 0 ---
+    if(disp_rate == 0){
 
-    #return(emi)
+      out[[i]] <- comp
 
-    #3. Immigrate --------------------
+    }else{
 
-    #3a. Calculate weights
-    #Weights calculated according to the densities of previous timestep (i.e. delayed)
-    weights <- nh_coords$hood%>%
-      lapply(function(x)x%>%left_join(out[[i-1]]%>%select(-ID),
-                                      by = c('x', 'y')))%>%
-      lapply(function(x)x%>%
-               mutate_at(sp_names, .funs = function(x)weighted_freq(N = x, delta = delta)))%>%
-      bind_rows()%>%
-      tidyr::pivot_longer(cols = sp_names, names_to = 'Species', values_to = 'weights')%>%
-      group_by(`x`, `y`, `Species`)%>%
-      group_nest(.key = 'weights')
+      # 2. Emigrate --------------------
+      # Occurs after competition (fraction of remaining population become emigrants)
+      #note: spp have same emigration rates
+      emi <- comp%>%
+        rowwise()%>%
+        mutate_at(vars(sp_names), .funs = function(x)dd_emigration(N = x, dd = dd_emi, discrete = TRUE, max = disp_rate))%>%
+        ungroup()%>%
+        tidyr::pivot_longer(cols = sp_names, names_to = "Species", values_to = 'emigrants')%>%
+        mutate(ID = as.character(ID))%>%
+        filter(`emigrants` > 0)
 
+      #return(emi)
 
-    #return(weights)
+      #3. Immigrate --------------------
 
-    #3b. Distribute emigrants across neighborhoods
-    immi <- emi%>%
-      left_join(weights, by = c('x','y','Species'))%>%
-      left_join(nh_coords, by = c('ID','x','y'))%>%
-      mutate(immigration = purrr::pmap(.l = list(hood = hood, emigrants = emigrants, weights = weights),
-                                        .f = function(hood, emigrants, weights)immigration(hood, emigrants, weights = weights$weights)))%>%
-      select(`Species`, `immigration`)%>%
-      unnest(immigration)%>%
-      group_by(`Species`, `x`, `y`)%>%
-      summarise(immigrants = sum(n), .groups = 'drop')
+      #3a. Calculate weights
+      #Weights calculated according to the densities of previous timestep (i.e. delayed)
+      weights <- nh_coords$hood%>%
+        lapply(function(x)x%>%left_join(out[[i-1]]%>%select(-ID),
+                                        by = c('x', 'y')))%>%
+        lapply(function(x)x%>%
+                 mutate_at(sp_names, .funs = function(x)weighted_freq(N = x, delta = delta)))%>%
+        bind_rows()%>%
+        tidyr::pivot_longer(cols = sp_names, names_to = 'Species', values_to = 'weights')%>%
+        group_by(`x`, `y`, `Species`)%>%
+        group_nest(.key = 'weights')
 
 
+      #return(weights)
 
-    # 4. Combine steps: growth - emigration + immigration --------------------
-    out[[i]] <- comp%>%
-      pivot_longer(cols = sp_names, names_to = 'Species', values_to = 'competition')%>%
-      left_join(emi%>%select(-ID), by = c('x','y','Species'))%>%
-      left_join(immi, by = c('x','y','Species'))%>%
-      tidyr::replace_na(., list(emigrants = 0, immigrants = 0))%>%
-      mutate(Density = `competition` - `emigrants` + `immigrants`)%>%
-      pivot_wider(names_from = 'Species', values_from = 'Density', id_cols = c('ID','x','y'))
+      #3b. Distribute emigrants across neighborhoods
+      immi <- emi%>%
+        left_join(weights, by = c('x','y','Species'))%>%
+        left_join(nh_coords, by = c('ID','x','y'))%>%
+        mutate(immigration = purrr::pmap(.l = list(hood = hood, emigrants = emigrants, weights = weights),
+                                         .f = function(hood, emigrants, weights)immigration(hood, emigrants, weights = weights$weights)))%>%
+        select(`Species`, `immigration`)%>%
+        unnest(immigration)%>%
+        group_by(`Species`, `x`, `y`)%>%
+        summarise(immigrants = sum(n), .groups = 'drop')
+
+
+
+      # 4. Combine steps: growth - emigration + immigration --------------------
+      out[[i]] <- comp%>%
+        pivot_longer(cols = sp_names, names_to = 'Species', values_to = 'competition')%>%
+        left_join(emi%>%select(-ID), by = c('x','y','Species'))%>%
+        left_join(immi, by = c('x','y','Species'))%>%
+        tidyr::replace_na(., list(emigrants = 0, immigrants = 0))%>%
+        mutate(Density = `competition` - `emigrants` + `immigrants`)%>%
+        pivot_wider(names_from = 'Species', values_from = 'Density', id_cols = c('ID','x','y'))
+
+    }
 
   }
 
