@@ -15,7 +15,9 @@ stochastic_sim(
   nh_size = 1,
   nh = "vonNeumann",
   dd_emi = FALSE,
-  torus = TRUE
+  torus = TRUE,
+  extinction_halt = TRUE,
+  patch_extinction = 0
 )
 }
 \arguments{
@@ -40,6 +42,10 @@ stochastic_sim(
 \item{dd_emi}{If TRUE, emigration is density-dependent and follows type-II functional response}
 
 \item{torus}{If TRUE, the lattice is wrapped around to remove edge effects}
+
+\item{extinction_halt}{If TRUE, simulation halts when one species goes extinct before timesteps is reached}
+
+\item{patch_extinction}{probability specifying the rate in which a given patch becomes totally extinct (default is 0)}
 }
 \description{
 Pieces functions together and runs a stochastic simulation of metacommunity dynamics
