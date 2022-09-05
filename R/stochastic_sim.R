@@ -14,6 +14,7 @@
 #' @param dd_emi If TRUE, emigration is density-dependent and follows type-II functional response
 #' @param torus If TRUE, the lattice is wrapped around to remove edge effects
 #' @param extinction_halt If TRUE, simulation halts when one species goes extinct before timesteps is reached
+#' @param patch_extinction probability specifying the rate in which a given patch becomes totally extinct (default is 0)
 
 #' @import dplyr
 #' @import tidyr
@@ -28,7 +29,8 @@
 
 
 stochastic_sim <- function(initial_df, aij, delta, r = 3, K = 100, timesteps = 5, disp_rate = 0.1, nh_size = 1,
-                           nh = "vonNeumann", dd_emi = FALSE,  torus = TRUE, extinction_halt = TRUE){
+                           nh = "vonNeumann", dd_emi = FALSE,  torus = TRUE,
+                           extinction_halt = TRUE, patch_extinction = 0){
 
   #Number of species
   no.spp <- initial_df%>%
@@ -152,26 +154,40 @@ stochastic_sim <- function(initial_df, aij, delta, r = 3, K = 100, timesteps = 5
 
     } #dispersal end
 
-    #Break if one species is extinct ------------
-    check_extinct <- out[[i]]%>%
-      select(N1,N2)%>%
-      colSums()
 
-    if(any(check_extinct == 0)){
-      break
+
+
+   # 5. Random extinction of patches ------------------
+    ext_patchID <- rbinom(n = nrow(land), size = 1, prob = patch_extinction)%>% #each patch has a probability equal to patch_extinction of going extinct
+      as.logical() #convert to boolean (T/F)
+
+    if(sum(ext_patchID) != 0){
+      out[[i]][ext_patchID, sp_names] <- 0 #subset from data and set densities to 0
+
     }
 
-  } #loop end
+
+
+  #Break if one species is extinct ------------
+  check_extinct <- out[[i]]%>%
+    select(N1,N2)%>%
+    colSums()
+
+  if(any(check_extinct == 0)){
+    break
+  }
+
+} #loop end
 
 
 
-  #Export data
-  out <- out%>%
-    bind_rows(.id = 'time')%>%
-    mutate(time = as.integer(`time`))
+#Export data
+out <- out%>%
+  bind_rows(.id = 'time')%>%
+  mutate(time = as.integer(`time`))
 
 
 
-  return(out)
+return(out)
 
 }
