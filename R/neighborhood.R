@@ -11,7 +11,7 @@
 #' @import dplyr
 #' @export
 
-neighborhood <- function(x, y, df, nh_size = 1, neighborhood = "vonNeumann",torus = TRUE){
+neighborhood <- function(x, y, df, nh_size = 1, neighborhood = "vonNeumann",torus = TRUE, origin = FALSE){
 
   #Neighborhood centered at the origin (0, 0)
   offsets <- expand.grid(x = -nh_size:nh_size, y = -nh_size:nh_size)%>% #This is equivalent to the Moore neighborhood
@@ -62,6 +62,13 @@ neighborhood <- function(x, y, df, nh_size = 1, neighborhood = "vonNeumann",toru
 
   #Get neighborhood data
   coords <- data.frame(x = x_coords, y = y_coords)
+
+  #If origin is TRUE, put the original coordinates back in
+  if(origin == TRUE){
+    coords <- coords%>%
+      bind_rows(data.frame(x = x, y = y))
+
+  }
   # nh <- coords%>%
   #   left_join(df, by = c('x', 'y'))%>%
   #   relocate(ID, .before = 'x')
