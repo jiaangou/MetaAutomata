@@ -158,13 +158,19 @@ stochastic_sim <- function(initial_df, aij, delta, r = 3, K = 100, timesteps = 5
 
 
    # 5. Random extinction of patches ------------------
-    ext_patchID <- rbinom(n = nrow(land), size = 1, prob = patch_extinction)%>% #each patch has a probability equal to patch_extinction of going extinct
-      as.logical() #convert to boolean (T/F)
+   if(patch_extinction != 0){
 
-    if(sum(ext_patchID) != 0){
-      out[[i]][ext_patchID, sp_names] <- 0 #subset from data and set densities to 0
+     #Draw patches with probability equal to extinction probability
+     ext_patchID <- rbinom(n = nrow(initial_df), size = 1, prob = patch_extinction)%>% #each patch has a probability equal to patch_extinction of going extinct
+       as.logical() #convert to boolean (T/F)
 
-    }
+     #Isolate those patches and set densities to 0
+     if(sum(ext_patchID) != 0){
+       out[[i]][ext_patchID, sp_names] <- 0 #subset from data and set densities to 0
+
+     }
+   }
+
 
 
 
