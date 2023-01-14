@@ -174,14 +174,20 @@ stochastic_sim <- function(initial_df, aij, delta, r = 3, K = 100, timesteps = 5
 
 
 
-  #Break if one species is extinct ------------
-  check_extinct <- out[[i]]%>%
-    select(N1,N2)%>%
-    colSums()
+  # Break loop if regional extinction happens
+  if(extinction_halt == TRUE){
 
-  if(any(check_extinct == 0)){
-    break
+    #check regional densities
+    check_extinct <- out[[i]]%>%
+      select(N1,N2)%>%
+      colSums()
+
+    #if any species goes extinction, break loop
+    if(any(check_extinct == 0)){
+      break
+    }
   }
+
 
 } #loop end
 
