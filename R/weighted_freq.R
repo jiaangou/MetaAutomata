@@ -12,10 +12,10 @@
 
 weighted_freq <- function(N, delta){
 
-  w <- exp(delta*(N+1))
-
+  w <-  (N + 1)^delta
   w_freq <- w/sum(w)
 
   return(w_freq)
-}
+
+  }
 
